@@ -3,14 +3,13 @@ using Envelope.Services.Exceptions;
 
 namespace Envelope.Services;
 
-public interface IResult<TIdentity>
-	where TIdentity : struct
+public interface IResult
 {
-	List<ILogMessage<TIdentity>> SuccessMessages { get; }
+	List<ILogMessage> SuccessMessages { get; }
 
-	List<ILogMessage<TIdentity>> WarningMessages { get; }
+	List<ILogMessage> WarningMessages { get; }
 
-	List<IErrorMessage<TIdentity>> ErrorMessages { get; }
+	List<IErrorMessage> ErrorMessages { get; }
 
 	bool HasSuccessMessage { get; }
 
@@ -23,13 +22,12 @@ public interface IResult<TIdentity>
 	/// <summary>
 	/// Returns null if no Error message found
 	/// </summary>
-	ResultException<TIdentity>? ToException();
+	ResultException? ToException();
 
 	void ThrowIfError();
 }
 
-public interface IResult<TData, TIdentity> : IResult<TIdentity>
-	where TIdentity : struct
+public interface IResult<TData> : IResult
 {
 	bool DataWasSet { get; }
 	TData? Data { get; set; }

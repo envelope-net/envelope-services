@@ -3,14 +3,13 @@ using Envelope.Logging;
 
 namespace Envelope.Services;
 
-public class Result<TIdentity> : IResult<TIdentity>
-	where TIdentity : struct
+public class Result : IResult
 {
-	public List<ILogMessage<TIdentity>> SuccessMessages { get; }
+	public List<ILogMessage> SuccessMessages { get; }
 
-	public List<ILogMessage<TIdentity>> WarningMessages { get; }
+	public List<ILogMessage> WarningMessages { get; }
 
-	public List<IErrorMessage<TIdentity>> ErrorMessages { get; }
+	public List<IErrorMessage> ErrorMessages { get; }
 
 	public bool HasSuccessMessage => 0 < SuccessMessages.Count;
 
@@ -24,13 +23,13 @@ public class Result<TIdentity> : IResult<TIdentity>
 
 	internal Result()
 	{
-		SuccessMessages = new List<ILogMessage<TIdentity>>();
-		WarningMessages = new List<ILogMessage<TIdentity>>();
-		ErrorMessages = new List<IErrorMessage<TIdentity>>();
+		SuccessMessages = new List<ILogMessage>();
+		WarningMessages = new List<ILogMessage>();
+		ErrorMessages = new List<IErrorMessage>();
 	}
 
-	public ResultException<TIdentity>? ToException()
-		=> ExceptionHelper.ToException(this);
+	public ResultException? ToException()
+		=> ExceptionHelper_TIdentity.ToException(this);
 
 	public void ThrowIfError()
 	{
@@ -41,8 +40,7 @@ public class Result<TIdentity> : IResult<TIdentity>
 	}
 }
 
-public class Result<TData, TIdentity> : Result<TIdentity>, IResult<TData, TIdentity>, IResult<TIdentity>
-	where TIdentity : struct
+public class Result<TData> : Result, IResult<TData>, IResult
 {
 	public bool DataWasSet { get; private set; }
 
