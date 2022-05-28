@@ -2,8 +2,7 @@
 
 namespace Envelope.Services.Exceptions;
 
-public class ResultException<TIdentity> : Exception
-	where TIdentity : struct
+public class ResultException : Exception
 {
 	public ResultException()
 		: base()

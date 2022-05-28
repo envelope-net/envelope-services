@@ -4,17 +4,16 @@ using Envelope.Trace;
 
 namespace Envelope.Services;
 
-public interface IResultBuilder<TBuilder, TObject, TIdentity>
-	where TBuilder : IResultBuilder<TBuilder, TObject, TIdentity>
-	where TObject : IResult<TIdentity>
-	where TIdentity : struct
+public interface IResultBuilder<TBuilder, TObject>
+	where TBuilder : IResultBuilder<TBuilder, TObject>
+	where TObject : IResult
 {
 	TBuilder Object(TObject result);
 	TObject Build();
 
-	bool MergeHasError(IResult<TIdentity> otherResult);
+	bool MergeHasError(IResult otherResult);
 
-	bool MergeAllHasError(IResult<TIdentity> otherResult);
+	bool MergeAllHasError(IResult otherResult);
 
 
 	bool HasError();
@@ -23,39 +22,38 @@ public interface IResultBuilder<TBuilder, TObject, TIdentity>
 
 	TBuilder ClearAllSuccessMessages();
 
-	TBuilder WithSuccess(ILogMessage<TIdentity> message);
+	TBuilder WithSuccess(ILogMessage message);
 
-	TBuilder WithWarn(ILogMessage<TIdentity> message);
+	TBuilder WithWarn(ILogMessage message);
 
-	TBuilder WithError(IErrorMessage<TIdentity> message);
+	TBuilder WithError(IErrorMessage message);
 
-	TBuilder WithSuccess(MethodLogScope<TIdentity> scope, Action<LogMessageBuilder<TIdentity>>? logMessageConfigurator);
+	TBuilder WithSuccess(MethodLogScope scope, Action<LogMessageBuilder>? logMessageConfigurator);
 
-	TBuilder WithSuccess(ITraceInfo<TIdentity> traceInfo, Action<LogMessageBuilder<TIdentity>>? logMessageConfigurator);
+	TBuilder WithSuccess(ITraceInfo traceInfo, Action<LogMessageBuilder>? logMessageConfigurator);
 
-	TBuilder WithWarn(MethodLogScope<TIdentity> scope, Action<LogMessageBuilder<TIdentity>>? logMessageConfigurator);
+	TBuilder WithWarn(MethodLogScope scope, Action<LogMessageBuilder>? logMessageConfigurator);
 
-	TBuilder WithWarn(ITraceInfo<TIdentity> traceInfo, Action<LogMessageBuilder<TIdentity>>? logMessageConfigurator);
+	TBuilder WithWarn(ITraceInfo traceInfo, Action<LogMessageBuilder>? logMessageConfigurator);
 
-	TBuilder WithError(MethodLogScope<TIdentity> scope, Action<ErrorMessageBuilder<TIdentity>>? logMessageConfigurator);
+	TBuilder WithError(MethodLogScope scope, Action<ErrorMessageBuilder>? logMessageConfigurator);
 
-	TBuilder WithError(ITraceInfo<TIdentity> traceInfo, Action<ErrorMessageBuilder<TIdentity>>? logMessageConfigurator);
+	TBuilder WithError(ITraceInfo traceInfo, Action<ErrorMessageBuilder>? logMessageConfigurator);
 
-	TBuilder ForAllSuccessMessages(Action<ILogMessage<TIdentity>> logMessageConfigurator);
+	TBuilder ForAllSuccessMessages(Action<ILogMessage> logMessageConfigurator);
 
-	TBuilder ForAllWarningMessages(Action<ILogMessage<TIdentity>> logMessageConfigurator);
+	TBuilder ForAllWarningMessages(Action<ILogMessage> logMessageConfigurator);
 
-	TBuilder ForAllIErrorMessages(Action<ILogMessage<TIdentity>> errorMessageConfigurator);
+	TBuilder ForAllIErrorMessages(Action<ILogMessage> errorMessageConfigurator);
 
-	TBuilder ForAllMessages(Action<ILogMessage<TIdentity>> messageConfigurator);
+	TBuilder ForAllMessages(Action<ILogMessage> messageConfigurator);
 
-	TBuilder Merge(IResult<TIdentity> otherResult);
+	TBuilder Merge(IResult otherResult);
 }
 
-public abstract class ResultBuilderBase<TBuilder, TObject, TIdentity> : IResultBuilder<TBuilder, TObject, TIdentity>
-	where TBuilder : ResultBuilderBase<TBuilder, TObject, TIdentity>
-	where TObject : IResult<TIdentity>
-	where TIdentity : struct
+public abstract class ResultBuilderBase<TBuilder, TObject> : IResultBuilder<TBuilder, TObject>
+	where TBuilder : ResultBuilderBase<TBuilder, TObject>
+	where TObject : IResult
 {
 	protected readonly TBuilder _builder;
 	protected TObject _result;
@@ -78,7 +76,7 @@ public abstract class ResultBuilderBase<TBuilder, TObject, TIdentity> : IResultB
 
 	#region API
 
-	public bool MergeHasError(IResult<TIdentity> otherResult)
+	public bool MergeHasError(IResult otherResult)
 	{
 		if (otherResult != null && otherResult.HasError)
 			_result.ErrorMessages.AddRange(otherResult.ErrorMessages);
@@ -86,7 +84,7 @@ public abstract class ResultBuilderBase<TBuilder, TObject, TIdentity> : IResultB
 		return _result.HasError;
 	}
 
-	public bool MergeAllHasError(IResult<TIdentity> otherResult)
+	public bool MergeAllHasError(IResult otherResult)
 	{
 		if (otherResult != null)
 		{
@@ -119,64 +117,64 @@ public abstract class ResultBuilderBase<TBuilder, TObject, TIdentity> : IResultB
 		return _builder;
 	}
 
-	public TBuilder WithSuccess(ILogMessage<TIdentity> message)
+	public TBuilder WithSuccess(ILogMessage message)
 	{
 		_result.SuccessMessages.Add(message);
 		return _builder;
 	}
 
-	public TBuilder WithWarn(ILogMessage<TIdentity> message)
+	public TBuilder WithWarn(ILogMessage message)
 	{
 		_result.WarningMessages.Add(message);
 		return _builder;
 	}
 
-	public TBuilder WithError(IErrorMessage<TIdentity> message)
+	public TBuilder WithError(IErrorMessage message)
 	{
 		_result.ErrorMessages.Add(message);
 		return _builder;
 	}
 
-	public TBuilder WithSuccess(MethodLogScope<TIdentity> scope, Action<LogMessageBuilder<TIdentity>>? logMessageConfigurator)
+	public TBuilder WithSuccess(MethodLogScope scope, Action<LogMessageBuilder>? logMessageConfigurator)
 		=> WithSuccess(scope?.TraceInfo!, logMessageConfigurator);
 
-	public TBuilder WithSuccess(ITraceInfo<TIdentity> traceInfo, Action<LogMessageBuilder<TIdentity>>? logMessageConfigurator)
+	public TBuilder WithSuccess(ITraceInfo traceInfo, Action<LogMessageBuilder>? logMessageConfigurator)
 	{
 		var logMessageBuilder =
-			new LogMessageBuilder<TIdentity>(traceInfo)
+			new LogMessageBuilder(traceInfo)
 				.LogLevel(LogLevel.Information);
 		logMessageConfigurator?.Invoke(logMessageBuilder);
 		_result.SuccessMessages.Add(logMessageBuilder.Build());
 		return _builder;
 	}
 
-	public TBuilder WithWarn(MethodLogScope<TIdentity> scope, Action<LogMessageBuilder<TIdentity>>? logMessageConfigurator)
+	public TBuilder WithWarn(MethodLogScope scope, Action<LogMessageBuilder>? logMessageConfigurator)
 		=> WithWarn(scope?.TraceInfo!, logMessageConfigurator);
 
-	public TBuilder WithWarn(ITraceInfo<TIdentity> traceInfo, Action<LogMessageBuilder<TIdentity>>? logMessageConfigurator)
+	public TBuilder WithWarn(ITraceInfo traceInfo, Action<LogMessageBuilder>? logMessageConfigurator)
 	{
 		var logMessageBuilder =
-			new LogMessageBuilder<TIdentity>(traceInfo)
+			new LogMessageBuilder(traceInfo)
 				.LogLevel(LogLevel.Warning);
 		logMessageConfigurator?.Invoke(logMessageBuilder);
 		_result.WarningMessages.Add(logMessageBuilder.Build());
 		return _builder;
 	}
 
-	public TBuilder WithError(MethodLogScope<TIdentity> scope, Action<ErrorMessageBuilder<TIdentity>>? errorMessageConfigurator)
+	public TBuilder WithError(MethodLogScope scope, Action<ErrorMessageBuilder>? errorMessageConfigurator)
 		=> WithError(scope?.TraceInfo!, errorMessageConfigurator);
 
-	public TBuilder WithError(ITraceInfo<TIdentity> traceInfo, Action<ErrorMessageBuilder<TIdentity>>? errorMessageConfigurator)
+	public TBuilder WithError(ITraceInfo traceInfo, Action<ErrorMessageBuilder>? errorMessageConfigurator)
 	{
 		var errorMessageBuilder =
-			new ErrorMessageBuilder<TIdentity>(traceInfo)
+			new ErrorMessageBuilder(traceInfo)
 				.LogLevel(LogLevel.Error);
 		errorMessageConfigurator?.Invoke(errorMessageBuilder);
 		_result.ErrorMessages.Add(errorMessageBuilder.Build());
 		return _builder;
 	}
 
-	public TBuilder ForAllSuccessMessages(Action<ILogMessage<TIdentity>> logMessageConfigurator)
+	public TBuilder ForAllSuccessMessages(Action<ILogMessage> logMessageConfigurator)
 	{
 		if (logMessageConfigurator == null)
 			throw new ArgumentNullException(nameof(logMessageConfigurator));
@@ -187,7 +185,7 @@ public abstract class ResultBuilderBase<TBuilder, TObject, TIdentity> : IResultB
 		return _builder;
 	}
 
-	public TBuilder ForAllWarningMessages(Action<ILogMessage<TIdentity>> logMessageConfigurator)
+	public TBuilder ForAllWarningMessages(Action<ILogMessage> logMessageConfigurator)
 	{
 		if (logMessageConfigurator == null)
 			throw new ArgumentNullException(nameof(logMessageConfigurator));
@@ -198,7 +196,7 @@ public abstract class ResultBuilderBase<TBuilder, TObject, TIdentity> : IResultB
 		return _builder;
 	}
 
-	public TBuilder ForAllIErrorMessages(Action<ILogMessage<TIdentity>> errorMessageConfigurator)
+	public TBuilder ForAllIErrorMessages(Action<ILogMessage> errorMessageConfigurator)
 	{
 		if (errorMessageConfigurator == null)
 			throw new ArgumentNullException(nameof(errorMessageConfigurator));
@@ -209,12 +207,12 @@ public abstract class ResultBuilderBase<TBuilder, TObject, TIdentity> : IResultB
 		return _builder;
 	}
 
-	public TBuilder ForAllMessages(Action<ILogMessage<TIdentity>> messageConfigurator)
+	public TBuilder ForAllMessages(Action<ILogMessage> messageConfigurator)
 		=> ForAllSuccessMessages(messageConfigurator)
 			.ForAllWarningMessages(messageConfigurator)
 			.ForAllIErrorMessages(messageConfigurator);
 
-	public TBuilder Merge(IResult<TIdentity> otherResult)
+	public TBuilder Merge(IResult otherResult)
 	{
 		if (otherResult != null)
 		{
@@ -232,20 +230,19 @@ public abstract class ResultBuilderBase<TBuilder, TObject, TIdentity> : IResultB
 	#endregion API
 }
 
-public class ResultBuilder<TIdentity> : ResultBuilderBase<ResultBuilder<TIdentity>, Result<TIdentity>, TIdentity>
-	where TIdentity : struct
+public class ResultBuilder : ResultBuilderBase<ResultBuilder, Result>
 {
 	public ResultBuilder()
-		: this(new Result<TIdentity>())
+		: this(new Result())
 	{
 	}
 
-	public ResultBuilder(Result<TIdentity> result)
+	public ResultBuilder(Result result)
 		: base(result)
 	{
 	}
 
-	public static implicit operator Result<TIdentity>?(ResultBuilder<TIdentity> builder)
+	public static implicit operator Result?(ResultBuilder builder)
 	{
 		if (builder == null)
 			return null;
@@ -253,16 +250,16 @@ public class ResultBuilder<TIdentity> : ResultBuilderBase<ResultBuilder<TIdentit
 		return builder._result;
 	}
 
-	public static implicit operator ResultBuilder<TIdentity>?(Result<TIdentity> result)
+	public static implicit operator ResultBuilder?(Result result)
 	{
 		if (result == null)
 			return null;
 
-		return new ResultBuilder<TIdentity>(result);
+		return new ResultBuilder(result);
 	}
 
-	public static IResult<TIdentity> Empty()
-		=> new ResultBuilder<TIdentity>().Build();
+	public static IResult Empty()
+		=> new ResultBuilder().Build();
 }
 
 
@@ -281,24 +278,22 @@ public class ResultBuilder<TIdentity> : ResultBuilderBase<ResultBuilder<TIdentit
 
 
 
-public interface IResultBuilder<TBuilder, TData, TObject, TIdentity> : IResultBuilder<TBuilder, TObject, TIdentity>
-	where TBuilder : IResultBuilder<TBuilder, TData, TObject, TIdentity>
-	where TObject : IResult<TData, TIdentity>
-	where TIdentity : struct
+public interface IResultBuilder<TBuilder, TData, TObject> : IResultBuilder<TBuilder, TObject>
+	where TBuilder : IResultBuilder<TBuilder, TData, TObject>
+	where TObject : IResult<TData>
 {
 	TBuilder WithData(TData? data);
 
 	TBuilder ClearData();
 
-	bool MergeAllWithDataHasError(IResult<TData, TIdentity> otherResult);
+	bool MergeAllWithDataHasError(IResult<TData> otherResult);
 
-	void MergeAllWithData(IResult<TData, TIdentity> otherResult);
+	void MergeAllWithData(IResult<TData> otherResult);
 }
 
-public abstract class ResultBuilderBase<TBuilder, TData, TObject, TIdentity> : ResultBuilderBase<TBuilder, TObject, TIdentity>, IResultBuilder<TBuilder, TData, TObject, TIdentity>
-	where TBuilder : ResultBuilderBase<TBuilder, TData, TObject, TIdentity>
-	where TObject : IResult<TData, TIdentity>
-	where TIdentity : struct
+public abstract class ResultBuilderBase<TBuilder, TData, TObject> : ResultBuilderBase<TBuilder, TObject>, IResultBuilder<TBuilder, TData, TObject>
+	where TBuilder : ResultBuilderBase<TBuilder, TData, TObject>
+	where TObject : IResult<TData>
 {
 	protected ResultBuilderBase(TObject result)
 		: base(result)
@@ -322,7 +317,7 @@ public abstract class ResultBuilderBase<TBuilder, TData, TObject, TIdentity> : R
 		return _builder;
 	}
 
-	public bool MergeAllWithDataHasError(IResult<TData, TIdentity> otherResult)
+	public bool MergeAllWithDataHasError(IResult<TData> otherResult)
 	{
 		if (otherResult != null)
 		{
@@ -341,50 +336,49 @@ public abstract class ResultBuilderBase<TBuilder, TData, TObject, TIdentity> : R
 		return _result.HasError;
 	}
 
-	public void MergeAllWithData(IResult<TData, TIdentity> otherResult)
+	public void MergeAllWithData(IResult<TData> otherResult)
 		=> MergeAllWithDataHasError(otherResult);
 }
 
-public class ResultBuilder<TData, TIdentity> : ResultBuilderBase<ResultBuilder<TData, TIdentity>, TData, IResult<TData, TIdentity>, TIdentity>
-	where TIdentity : struct
+public class ResultBuilder<TData> : ResultBuilderBase<ResultBuilder<TData>, TData, IResult<TData>>
 {
 	public ResultBuilder()
-		: this(new Result<TData, TIdentity>())
+		: this(new Result<TData>())
 	{
 	}
 
-	public ResultBuilder(IResult<TData, TIdentity> result)
+	public ResultBuilder(IResult<TData> result)
 		: base(result)
 	{
 	}
 
-	public static implicit operator Result<TData, TIdentity>?(ResultBuilder<TData, TIdentity> builder)
+	public static implicit operator Result<TData>?(ResultBuilder<TData> builder)
 	{
 		if (builder == null)
 			return null;
 
-		return builder._result as Result<TData, TIdentity>;
+		return builder._result as Result<TData>;
 	}
 
-	public static implicit operator ResultBuilder<TData, TIdentity>?(Result<TData, TIdentity> result)
+	public static implicit operator ResultBuilder<TData>?(Result<TData> result)
 	{
 		if (result == null)
 			return null;
 
-		return new ResultBuilder<TData, TIdentity>(result);
+		return new ResultBuilder<TData>(result);
 	}
 
-	public static implicit operator ResultBuilder<TIdentity>?(ResultBuilder<TData, TIdentity> builder)
+	public static implicit operator ResultBuilder?(ResultBuilder<TData> builder)
 	{
 		if (builder == null)
 			return null;
 
-		return new ResultBuilder<TIdentity>((Result<TData, TIdentity>)builder._result);
+		return new ResultBuilder((Result<TData>)builder._result);
 	}
 
-	public static IResult<TData, TIdentity> Empty()
-		=> new ResultBuilder<TData, TIdentity>().Build();
+	public static IResult<TData> Empty()
+		=> new ResultBuilder<TData>().Build();
 
-	public static IResult<TData, TIdentity> FromResult(TData result)
-		=> new ResultBuilder<TData, TIdentity>().WithData(result).Build();
+	public static IResult<TData> FromResult(TData result)
+		=> new ResultBuilder<TData>().WithData(result).Build();
 }
