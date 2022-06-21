@@ -1,6 +1,10 @@
-﻿using Envelope.Localization;
+﻿using Envelope.Extensions;
+using Envelope.Localization;
 using Envelope.Logging;
 using Envelope.Trace;
+using Envelope.Validation;
+using Envelope.Validation.Results;
+using Microsoft.Extensions.Logging;
 
 namespace Envelope.Services;
 
@@ -430,4 +434,87 @@ public static class IResultExtensions
 					.ClientMessage(clientMessage)
 					.InternalMessage(internalMessage))
 			.Build();
+
+	public static bool MergeHasError(this IResult result, ITraceInfo traceInfo, IValidationResult validationResult)
+	{
+		if (result == null)
+			throw new ArgumentNullException(nameof(result));
+
+		if (validationResult == null)
+			throw new ArgumentNullException(nameof(validationResult));
+
+		foreach (var failure in validationResult.Errors)
+		{
+			if (failure.Severity == ValidationSeverity.Error)
+			{
+				var errorMessage = ValidationFailureToErrorMessage(traceInfo, failure);
+				result.ErrorMessages.Add(errorMessage);
+			}
+			else
+			{
+				var warnigMessage = ValidationFailureToWarningMessage(traceInfo, failure);
+				result.WarningMessages.Add(warnigMessage);
+			}
+		}
+
+		return result.HasError;
+	}
+
+	public static bool MergeHasError<TResultBuilder>(this TResultBuilder resultBuilder, ITraceInfo traceInfo, IValidationResult validationResult)
+		where TResultBuilder : IResultBuilder
+	{
+		if (resultBuilder == null)
+			throw new ArgumentNullException(nameof(resultBuilder));
+
+		if (validationResult == null)
+			throw new ArgumentNullException(nameof(validationResult));
+
+		foreach (var failure in validationResult.Errors)
+		{
+			if (failure.Severity == ValidationSeverity.Error)
+			{
+				var errorMessage = ValidationFailureToErrorMessage(traceInfo, failure);
+				resultBuilder.AddError(errorMessage);
+			}
+			else
+			{
+				var warnigMessage = ValidationFailureToWarningMessage(traceInfo, failure);
+				resultBuilder.AddWarning(warnigMessage);
+			}
+		}
+
+		return resultBuilder.HasAnyError();
+	}
+
+	private static IErrorMessage ValidationFailureToErrorMessage(ITraceInfo traceInfo, IBaseValidationFailure failure)
+	{
+		if (failure == null)
+			throw new ArgumentNullException(nameof(failure));
+
+		var errorMessageBuilder =
+			new ErrorMessageBuilder(traceInfo)
+				.LogLevel(LogLevel.Error)
+				.ValidationFailure(failure, true)
+				.ClientMessage(failure.Message, true) //TODO read from settings when using MessageWithPropertyName
+				.Detail(failure.DetailInfo)
+				.PropertyName(string.IsNullOrWhiteSpace(failure.ObjectPath.PropertyName) ? null : failure.ObjectPath.ToString()?.TrimPrefix("_."), !string.IsNullOrWhiteSpace(failure.ObjectPath.PropertyName));
+
+		return errorMessageBuilder.Build();
+	}
+
+	private static ILogMessage ValidationFailureToWarningMessage(ITraceInfo traceInfo, IBaseValidationFailure failure)
+	{
+		if (failure == null)
+			throw new ArgumentNullException(nameof(failure));
+
+		var logMessageBuilder =
+			new LogMessageBuilder(traceInfo)
+				.LogLevel(LogLevel.Warning)
+				.ValidationFailure(failure, true)
+				.ClientMessage(failure.Message, true) //TODO read from settings when using MessageWithPropertyName
+				.Detail(failure.DetailInfo)
+				.PropertyName(string.IsNullOrWhiteSpace(failure.ObjectPath.PropertyName) ? null : failure.ObjectPath.ToString()?.TrimPrefix("_."), !string.IsNullOrWhiteSpace(failure.ObjectPath.PropertyName));
+
+		return logMessageBuilder.Build();
+	}
 }

@@ -6,18 +6,19 @@ using System.Runtime.CompilerServices;
 
 namespace Envelope.Services;
 
-public abstract class RepositoryBase<TEntity> : IRepository<TEntity>
+public abstract class ServiceBase<TEntity, TIdentity> : IService<TEntity>
 	where TEntity : IEntity
+	where TIdentity : struct
 {
 	protected ILogger Logger { get; }
 
-	public RepositoryBase(ILogger logger)
+	public ServiceBase(ILogger logger)
 	{
 		Logger = logger ?? throw new ArgumentNullException(nameof(logger));
 	}
 
-	public MethodLogScope CreateScope(
-		MethodLogScope? methodLogScope,
+	public MethodLogScope<TIdentity> CreateScope(
+		MethodLogScope<TIdentity>? methodLogScope,
 		string? sourceSystemName = null,
 		IEnumerable<MethodParameter>? methodParameters = null,
 		[CallerMemberName] string memberName = "",
@@ -25,8 +26,8 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity>
 		[CallerLineNumber] int sourceLineNumber = 0)
 		=> CreateScope(methodLogScope?.TraceInfo, sourceSystemName, methodParameters, memberName, sourceFilePath, sourceLineNumber);
 
-	public MethodLogScope CreateScope(
-		ITraceInfo? previousTraceInfo,
+	public MethodLogScope<TIdentity> CreateScope(
+		ITraceInfo<TIdentity>? previousTraceInfo,
 		string? sourceSystemName = null,
 		IEnumerable<MethodParameter>? methodParameters = null,
 		[CallerMemberName] string memberName = "",
@@ -34,7 +35,7 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity>
 		[CallerLineNumber] int sourceLineNumber = 0)
 	{
 		var traceInfo =
-			new TraceInfoBuilder(
+			new TraceInfoBuilder<TIdentity>(
 				sourceSystemName ?? previousTraceInfo?.SourceSystemName!,
 				new TraceFrameBuilder(previousTraceInfo?.TraceFrame)
 					.CallerMemberName(memberName)
@@ -47,11 +48,11 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity>
 
 		var disposable = Logger.BeginScope(new Dictionary<string, Guid?>
 		{
-			[nameof(ILogMessage.TraceInfo.TraceFrame.MethodCallId)] = traceInfo.TraceFrame.MethodCallId,
-			[nameof(ILogMessage.TraceInfo.CorrelationId)] = traceInfo.CorrelationId
+			[nameof(ILogMessage<TIdentity>.TraceInfo.TraceFrame.MethodCallId)] = traceInfo.TraceFrame.MethodCallId,
+			[nameof(ILogMessage<TIdentity>.TraceInfo.CorrelationId)] = traceInfo.CorrelationId
 		});
 
-		var scope = new MethodLogScope(traceInfo, disposable);
+		var scope = new MethodLogScope<TIdentity>(traceInfo, disposable);
 		return scope;
 	}
 }

@@ -2,7 +2,7 @@
 
 namespace Envelope.Services;
 
-public interface IRepository<TEntity>
+public interface IService<TEntity>
 	where TEntity : IEntity
 {
 	//void Add(TEntity entity);
