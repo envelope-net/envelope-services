@@ -6,64 +6,50 @@ namespace Envelope.Services.Transactions;
 
 public partial class ServiceTransactionInterceptor : TransactionInterceptor
 {
-	public ServiceTransactionInterceptor(
-		IServiceProvider serviceProvider,
-		ITransactionManagerFactory transactionManagerFactory,
-		Func<IServiceProvider, ITransactionManager, Task<ITransactionContext>> transactionContextFactory,
-		Func<IServiceProvider, ITransactionManager, ITransactionContext> syncTransactionContextFactory)
-		: base(serviceProvider, transactionManagerFactory, transactionContextFactory, syncTransactionContextFactory)
-	{
-	}
-
-	public virtual async Task<IResult> ExecuteAsync(
+	public virtual IResult Execute(
 		bool isReadOnly,
 		ITraceInfo traceInfo,
-		Func<ITraceInfo, ITransactionContext, CancellationToken, Task<IResult>> action,
+		Func<ITraceInfo, ITransactionContext, IResult> action,
 		string? unhandledExceptionDetail,
-		Func<ITraceInfo, Exception?, string?, Task<IErrorMessage>> onError,
-		Func<Task>? @finally,
-		bool throwOnError = true,
-		CancellationToken cancellationToken = default)
-		=> await ExecuteActionAsync(
+		Func<ITraceInfo, Exception?, string?, IErrorMessage> onError,
+		Action? @finally,
+		bool throwOnError = true)
+		=> ExecuteAction(
 				isReadOnly,
 				traceInfo,
-				await CreateTransactionContextAsync().ConfigureAwait(false),
+				CreateTransactionContext(),
 				action,
 				unhandledExceptionDetail,
 				onError,
 				@finally,
-				true,
-				cancellationToken).ConfigureAwait(false);
+				true);
 
-	public virtual async Task<IResult<T>> ExecuteAsync<T>(
+	public virtual IResult<T> Execute<T>(
 		bool isReadOnly,
 		ITraceInfo traceInfo,
-		Func<ITraceInfo, ITransactionContext, CancellationToken, Task<IResult<T>>> action,
+		Func<ITraceInfo, ITransactionContext, IResult<T>> action,
 		string? unhandledExceptionDetail,
-		Func<ITraceInfo, Exception?, string?, Task<IErrorMessage>> onError,
-		Func<Task>? @finally,
-		CancellationToken cancellationToken = default)
-		=> await ExecuteActionAsync(
+		Func<ITraceInfo, Exception?, string?, IErrorMessage> onError,
+		Action? @finally)
+		=> ExecuteAction(
 				isReadOnly,
 				traceInfo,
-				await CreateTransactionContextAsync().ConfigureAwait(false),
+				CreateTransactionContext(),
 				action,
 				unhandledExceptionDetail,
 				onError,
 				@finally,
-				true,
-				cancellationToken).ConfigureAwait(false);
+				true);
 
-	public static async Task<IResult> ExecuteActionAsync(
+	public static IResult ExecuteAction(
 		bool isReadOnly,
 		ITraceInfo traceInfo,
 		ITransactionContext transactionContext,
-		Func<ITraceInfo, ITransactionContext, CancellationToken, Task<IResult>> action,
+		Func<ITraceInfo, ITransactionContext, IResult> action,
 		string? unhandledExceptionDetail,
-		Func<ITraceInfo, Exception?, string?, Task<IErrorMessage>> onError,
-		Func<Task>? @finally,
-		bool disposeTransactionContext = true,
-		CancellationToken cancellationToken = default)
+		Func<ITraceInfo, Exception?, string?, IErrorMessage> onError,
+		Action? @finally,
+		bool disposeTransactionContext = true)
 	{
 		traceInfo = TraceInfo.Create(traceInfo);
 		var result = new ResultBuilder();
@@ -79,7 +65,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 
 		try
 		{
-			var actionResult = await action(traceInfo, transactionContext, cancellationToken).ConfigureAwait(false);
+			var actionResult = action(traceInfo, transactionContext);
 			result.MergeHasError(actionResult);
 
 			if (isReadOnly && transactionContext.TransactionResult != TransactionResult.None)
@@ -99,7 +85,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 			else
 			{
 				if (transactionContext.TransactionResult == TransactionResult.Commit)
-					await transactionContext.TransactionManager.CommitAsync(cancellationToken).ConfigureAwait(false);
+					transactionContext.TransactionManager.Commit();
 			}
 
 			return result.Build();
@@ -108,7 +94,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		{
 			try
 			{
-				var errorMessage = await onError(traceInfo, ex, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : UnhandledExceptionInfo).ConfigureAwait(false);
+				var errorMessage = onError(traceInfo, ex, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : UnhandledExceptionInfo);
 				result.WithError(errorMessage);
 			}
 			catch (Exception logEx)
@@ -127,13 +113,13 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 
 			try
 			{
-				await transactionContext.TransactionManager.TryRollbackAsync(ex, cancellationToken).ConfigureAwait(false);
+				transactionContext.TransactionManager.TryRollback(ex);
 			}
 			catch (Exception rollbackEx)
 			{
 				try
 				{
-					var errorMessage = await onError(traceInfo, rollbackEx, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultRollbackErrorInfo).ConfigureAwait(false);
+					var errorMessage = onError(traceInfo, rollbackEx, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultRollbackErrorInfo);
 					result.WithError(errorMessage);
 				}
 				catch (Exception logEx)
@@ -153,19 +139,19 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 			{
 				try
 				{
-					await transactionContext.TransactionManager.TryRollbackAsync(null, cancellationToken).ConfigureAwait(false);
+					transactionContext.TransactionManager.TryRollback(null);
 				}
 				catch (Exception rollbackEx)
 				{
 					try
 					{
 						var errorMessage = 
-							await onError(
+							onError(
 								traceInfo,
 								rollbackEx,
 								!string.IsNullOrWhiteSpace(transactionContext.RollbackErrorInfo)
 									? $"{(!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? $"{unhandledExceptionDetail} " : "")}{transactionContext.RollbackErrorInfo} {DefaultRollbackErrorInfo}"
-									: (!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultRollbackErrorInfo)).ConfigureAwait(false);
+									: (!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultRollbackErrorInfo));
 
 						result.WithError(errorMessage);
 					}
@@ -187,13 +173,13 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 			{
 				try
 				{
-					await @finally().ConfigureAwait(false);
+					@finally();
 				}
 				catch (Exception finallyEx)
 				{
 					try
 					{
-						var errorMessage = await onError(traceInfo, finallyEx, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultFinallyInfo).ConfigureAwait(false);
+						var errorMessage = onError(traceInfo, finallyEx, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultFinallyInfo);
 						result.WithError(errorMessage);
 					}
 					catch (Exception logEx)
@@ -213,14 +199,14 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 #if NETSTANDARD2_0 || NETSTANDARD2_1
 					transactionContext.Dispose();
 #else
-					await transactionContext.DisposeAsync().ConfigureAwait(false);
+					transactionContext.Dispose();
 #endif
 				}
 				catch (Exception disposeEx)
 				{
 					try
 					{
-						var errorMessage = await onError(traceInfo, disposeEx, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultDisposeInfo).ConfigureAwait(false);
+						var errorMessage = onError(traceInfo, disposeEx, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultDisposeInfo);
 						result.WithError(errorMessage);
 					}
 					catch (Exception logEx)
@@ -235,16 +221,15 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		}
 	}
 
-	public static async Task<IResult<T>> ExecuteActionAsync<T>(
+	public static IResult<T> ExecuteAction<T>(
 		bool isReadOnly,
 		ITraceInfo traceInfo,
 		ITransactionContext transactionContext,
-		Func<ITraceInfo, ITransactionContext, CancellationToken, Task<IResult<T>>> action,
+		Func<ITraceInfo, ITransactionContext, IResult<T>> action,
 		string? unhandledExceptionDetail,
-		Func<ITraceInfo, Exception?, string?, Task<IErrorMessage>> onError,
-		Func<Task>? @finally,
-		bool disposeTransactionContext = true,
-		CancellationToken cancellationToken = default)
+		Func<ITraceInfo, Exception?, string?, IErrorMessage> onError,
+		Action? @finally,
+		bool disposeTransactionContext = true)
 	{
 		traceInfo = TraceInfo.Create(traceInfo);
 		var result = new ResultBuilder<T>();
@@ -260,7 +245,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 
 		try
 		{
-			var actionResult = await action(traceInfo, transactionContext, cancellationToken).ConfigureAwait(false);
+			var actionResult = action(traceInfo, transactionContext);
 			result.MergeHasError(actionResult);
 
 			if (isReadOnly && transactionContext.TransactionResult != TransactionResult.None)
@@ -280,7 +265,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 			else
 			{
 				if (transactionContext.TransactionResult == TransactionResult.Commit)
-					await transactionContext.TransactionManager.CommitAsync(cancellationToken).ConfigureAwait(false);
+					transactionContext.TransactionManager.Commit();
 			}
 
 			return result.WithData(actionResult.Data).Build();
@@ -289,7 +274,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		{
 			try
 			{
-				var errorMessage = await onError(traceInfo, ex, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : UnhandledExceptionInfo).ConfigureAwait(false);
+				var errorMessage = onError(traceInfo, ex, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : UnhandledExceptionInfo);
 				result.WithError(errorMessage);
 			}
 			catch (Exception logEx)
@@ -308,13 +293,13 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 
 			try
 			{
-				await transactionContext.TransactionManager.TryRollbackAsync(ex, cancellationToken).ConfigureAwait(false);
+				transactionContext.TransactionManager.TryRollback(ex);
 			}
 			catch (Exception rollbackEx)
 			{
 				try
 				{
-					var errorMessage = await onError(traceInfo, rollbackEx, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultRollbackErrorInfo).ConfigureAwait(false);
+					var errorMessage = onError(traceInfo, rollbackEx, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultRollbackErrorInfo);
 					result.WithError(errorMessage);
 				}
 				catch (Exception logEx)
@@ -334,19 +319,19 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 			{
 				try
 				{
-					await transactionContext.TransactionManager.TryRollbackAsync(null, cancellationToken).ConfigureAwait(false);
+					transactionContext.TransactionManager.TryRollback(null);
 				}
 				catch (Exception rollbackEx)
 				{
 					try
 					{
 						var errorMessage = 
-							await onError(
+							onError(
 								traceInfo,
 								rollbackEx,
 								!string.IsNullOrWhiteSpace(transactionContext.RollbackErrorInfo)
 									? $"{(!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? $"{unhandledExceptionDetail} " : "")}{transactionContext.RollbackErrorInfo} {DefaultRollbackErrorInfo}"
-									: (!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultRollbackErrorInfo)).ConfigureAwait(false);
+									: (!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultRollbackErrorInfo));
 
 						result.WithError(errorMessage);
 					}
@@ -368,13 +353,13 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 			{
 				try
 				{
-					await @finally().ConfigureAwait(false);
+					@finally();
 				}
 				catch (Exception finallyEx)
 				{
 					try
 					{
-						var errorMessage = await onError(traceInfo, finallyEx, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultFinallyInfo).ConfigureAwait(false);
+						var errorMessage = onError(traceInfo, finallyEx, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultFinallyInfo);
 						result.WithError(errorMessage);
 					}
 					catch (Exception logEx)
@@ -394,14 +379,14 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 #if NETSTANDARD2_0 || NETSTANDARD2_1
 					transactionContext.Dispose();
 #else
-					await transactionContext.DisposeAsync().ConfigureAwait(false);
+					transactionContext.Dispose();
 #endif
 				}
 				catch (Exception disposeEx)
 				{
 					try
 					{
-						var errorMessage = await onError(traceInfo, disposeEx, DefaultDisposeInfo).ConfigureAwait(false);
+						var errorMessage = onError(traceInfo, disposeEx, DefaultDisposeInfo);
 						result.WithError(errorMessage);
 					}
 					catch (Exception logEx)
