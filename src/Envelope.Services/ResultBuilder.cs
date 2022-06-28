@@ -4,7 +4,16 @@ using Envelope.Trace;
 
 namespace Envelope.Services;
 
-public interface IResultBuilder<TBuilder, TObject>
+public interface IResultBuilder
+{
+	bool HasAnyError();
+
+	IResultBuilder AddWarning(ILogMessage message);
+
+	IResultBuilder AddError(IErrorMessage message);
+}
+
+public interface IResultBuilder<TBuilder, TObject> : IResultBuilder
 	where TBuilder : IResultBuilder<TBuilder, TObject>
 	where TObject : IResult
 {
@@ -51,7 +60,7 @@ public interface IResultBuilder<TBuilder, TObject>
 	TBuilder Merge(IResult otherResult);
 }
 
-public abstract class ResultBuilderBase<TBuilder, TObject> : IResultBuilder<TBuilder, TObject>
+public abstract class ResultBuilderBase<TBuilder, TObject> : IResultBuilder<TBuilder, TObject>, IResultBuilder
 	where TBuilder : ResultBuilderBase<TBuilder, TObject>
 	where TObject : IResult
 {
@@ -227,10 +236,19 @@ public abstract class ResultBuilderBase<TBuilder, TObject> : IResultBuilder<TBui
 		return _builder;
 	}
 
+	bool IResultBuilder.HasAnyError()
+		=> Build().HasError;
+
+	IResultBuilder IResultBuilder.AddWarning(ILogMessage message)
+		=> WithWarn(message);
+
+	IResultBuilder IResultBuilder.AddError(IErrorMessage message)
+		=> WithError(message);
+
 	#endregion API
 }
 
-public class ResultBuilder : ResultBuilderBase<ResultBuilder, Result>
+public class ResultBuilder : ResultBuilderBase<ResultBuilder, Result>, IResultBuilder
 {
 	public ResultBuilder()
 		: this(new Result())
@@ -278,7 +296,7 @@ public class ResultBuilder : ResultBuilderBase<ResultBuilder, Result>
 
 
 
-public interface IResultBuilder<TBuilder, TData, TObject> : IResultBuilder<TBuilder, TObject>
+public interface IResultBuilder<TBuilder, TData, TObject> : IResultBuilder<TBuilder, TObject>, IResultBuilder
 	where TBuilder : IResultBuilder<TBuilder, TData, TObject>
 	where TObject : IResult<TData>
 {
@@ -291,7 +309,7 @@ public interface IResultBuilder<TBuilder, TData, TObject> : IResultBuilder<TBuil
 	void MergeAllWithData(IResult<TData> otherResult);
 }
 
-public abstract class ResultBuilderBase<TBuilder, TData, TObject> : ResultBuilderBase<TBuilder, TObject>, IResultBuilder<TBuilder, TData, TObject>
+public abstract class ResultBuilderBase<TBuilder, TData, TObject> : ResultBuilderBase<TBuilder, TObject>, IResultBuilder<TBuilder, TData, TObject>, IResultBuilder
 	where TBuilder : ResultBuilderBase<TBuilder, TData, TObject>
 	where TObject : IResult<TData>
 {
@@ -340,7 +358,7 @@ public abstract class ResultBuilderBase<TBuilder, TData, TObject> : ResultBuilde
 		=> MergeAllWithDataHasError(otherResult);
 }
 
-public class ResultBuilder<TData> : ResultBuilderBase<ResultBuilder<TData>, TData, IResult<TData>>
+public class ResultBuilder<TData> : ResultBuilderBase<ResultBuilder<TData>, TData, IResult<TData>>, IResultBuilder
 {
 	public ResultBuilder()
 		: this(new Result<TData>())
