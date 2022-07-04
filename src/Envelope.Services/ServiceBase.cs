@@ -1,13 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
-using Envelope.Model;
-using Envelope.Logging;
+﻿using Envelope.Logging;
 using Envelope.Trace;
+using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
 
 namespace Envelope.Services;
 
-public abstract class ServiceBase<TEntity> : IService<TEntity>
-	where TEntity : IEntity
+public abstract class ServiceBase : IService
 {
 	protected ILogger Logger { get; }
 
