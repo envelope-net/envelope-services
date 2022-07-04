@@ -6,8 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace Envelope.Services;
 
-public abstract class ServiceBase<TEntity, TIdentity> : IService<TEntity>
-	where TEntity : IEntity
+public abstract class ServiceBase<TIdentity> : IService
 	where TIdentity : struct
 {
 	protected ILogger Logger { get; }
