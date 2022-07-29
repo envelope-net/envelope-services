@@ -279,7 +279,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 			}
 			else
 			{
-				if (transactionContext.TransactionResult == TransactionResult.Commit)
+				if (transactionContext.TransactionResult == TransactionResult.Commit) 
 					await transactionContext.TransactionManager.CommitAsync(cancellationToken).ConfigureAwait(false);
 			}
 
