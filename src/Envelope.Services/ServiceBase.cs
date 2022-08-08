@@ -15,25 +15,26 @@ public abstract class ServiceBase : IService
 	}
 
 	public MethodLogScope CreateScope(
-		MethodLogScope? methodLogScope,
-		string? sourceSystemName = null,
+		MethodLogScope methodLogScope,
 		IEnumerable<MethodParameter>? methodParameters = null,
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
-		=> CreateScope(methodLogScope?.TraceInfo, sourceSystemName, methodParameters, memberName, sourceFilePath, sourceLineNumber);
+		=> CreateScope(methodLogScope?.TraceInfo!, methodParameters, memberName, sourceFilePath, sourceLineNumber);
 
 	public MethodLogScope CreateScope(
-		ITraceInfo? previousTraceInfo,
-		string? sourceSystemName = null,
+		ITraceInfo previousTraceInfo,
 		IEnumerable<MethodParameter>? methodParameters = null,
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
 	{
+		if (previousTraceInfo == null)
+			throw new ArgumentNullException(nameof(previousTraceInfo));
+
 		var traceInfo =
 			new TraceInfoBuilder(
-				sourceSystemName ?? previousTraceInfo?.SourceSystemName!,
+				previousTraceInfo?.SourceSystemName!,
 				new TraceFrameBuilder(previousTraceInfo?.TraceFrame)
 					.CallerMemberName(memberName)
 					.CallerFilePath(sourceFilePath)
