@@ -1,5 +1,6 @@
 ﻿using Envelope.Logging;
 using Envelope.Services.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace Envelope.Services;
 
@@ -22,7 +23,7 @@ public interface IResult
 	/// <summary>
 	/// Returns null if no Error message found
 	/// </summary>
-	ResultException? ToException();
+	ResultException? ToException(ILogger? logger = null, bool skipIfAlreadyLogged = true);
 
 	void ThrowIfError();
 }

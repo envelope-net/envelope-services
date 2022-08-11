@@ -1,5 +1,6 @@
 ﻿using Envelope.Services.Exceptions;
 using Envelope.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace Envelope.Services;
 
@@ -28,8 +29,8 @@ public class Result : IResult
 		ErrorMessages = new List<IErrorMessage>();
 	}
 
-	public ResultException? ToException()
-		=> ExceptionHelper_TIdentity.ToException(this);
+	public ResultException? ToException(ILogger? logger = null, bool skipIfAlreadyLogged = true)
+		=> ExceptionHelper.ToException(this);
 
 	public void ThrowIfError()
 	{

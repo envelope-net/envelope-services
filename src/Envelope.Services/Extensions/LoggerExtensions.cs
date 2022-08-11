@@ -1,8 +1,7 @@
-﻿using Envelope.Logging;
-using Envelope.Logging.Extensions;
+﻿using Envelope.Services;
 using Microsoft.Extensions.Logging;
 
-namespace Envelope.Services.Extensions;
+namespace Envelope.Logging.Extensions;
 
 public static class LoggerExtensions
 {

@@ -7,7 +7,7 @@ namespace Envelope.Services;
 
 public abstract class ServiceBase : IService
 {
-	protected ILogger Logger { get; }
+	public ILogger Logger { get; }
 
 	public ServiceBase(ILogger logger)
 	{
