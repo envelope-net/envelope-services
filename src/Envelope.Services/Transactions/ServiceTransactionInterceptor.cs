@@ -6,63 +6,15 @@ namespace Envelope.Services.Transactions;
 
 public partial class ServiceTransactionInterceptor : TransactionInterceptor
 {
-	public ServiceTransactionInterceptor(
-		IServiceProvider serviceProvider,
-		ITransactionManagerFactory transactionManagerFactory,
-		Func<IServiceProvider, ITransactionManager, Task<ITransactionContext>> transactionContextFactory,
-		Func<IServiceProvider, ITransactionManager, ITransactionContext> syncTransactionContextFactory)
-		: base(serviceProvider, transactionManagerFactory, transactionContextFactory, syncTransactionContextFactory)
-	{
-	}
-
-	public virtual async Task<IResult> ExecuteAsync(
-		bool isReadOnly,
-		ITraceInfo traceInfo,
-		Func<ITraceInfo, ITransactionContext, CancellationToken, Task<IResult>> action,
-		string? unhandledExceptionDetail,
-		Func<ITraceInfo, Exception?, string?, Task<IErrorMessage>> onError,
-		Func<Task>? @finally,
-		bool throwOnError = true,
-		CancellationToken cancellationToken = default)
-		=> await ExecuteActionAsync(
-				isReadOnly,
-				traceInfo,
-				await CreateTransactionContextAsync().ConfigureAwait(false),
-				action,
-				unhandledExceptionDetail,
-				onError,
-				@finally,
-				true,
-				cancellationToken).ConfigureAwait(false);
-
-	public virtual async Task<IResult<T>> ExecuteAsync<T>(
-		bool isReadOnly,
-		ITraceInfo traceInfo,
-		Func<ITraceInfo, ITransactionContext, CancellationToken, Task<IResult<T>>> action,
-		string? unhandledExceptionDetail,
-		Func<ITraceInfo, Exception?, string?, Task<IErrorMessage>> onError,
-		Func<Task>? @finally,
-		CancellationToken cancellationToken = default)
-		=> await ExecuteActionAsync(
-				isReadOnly,
-				traceInfo,
-				await CreateTransactionContextAsync().ConfigureAwait(false),
-				action,
-				unhandledExceptionDetail,
-				onError,
-				@finally,
-				true,
-				cancellationToken).ConfigureAwait(false);
-
 	public static async Task<IResult> ExecuteActionAsync(
 		bool isReadOnly,
 		ITraceInfo traceInfo,
-		ITransactionContext transactionContext,
-		Func<ITraceInfo, ITransactionContext, CancellationToken, Task<IResult>> action,
+		ITransactionController transactionController,
+		Func<ITraceInfo, ITransactionController, CancellationToken, Task<IResult>> action,
 		string? unhandledExceptionDetail,
 		Func<ITraceInfo, Exception?, string?, Task<IErrorMessage>> onError,
 		Func<Task>? @finally,
-		bool disposeTransactionContext = true,
+		bool disposeTransactionController = true,
 		CancellationToken cancellationToken = default)
 	{
 		traceInfo = TraceInfo.Create(traceInfo);
@@ -74,32 +26,32 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		if (onError == null)
 			return result.WithArgumentNullException(traceInfo, nameof(onError));
 
-		if (transactionContext == null)
-			return result.WithArgumentNullException(traceInfo, nameof(transactionContext));
+		if (transactionController == null)
+			return result.WithArgumentNullException(traceInfo, nameof(transactionController));
 
 		try
 		{
-			var actionResult = await action(traceInfo, transactionContext, cancellationToken).ConfigureAwait(false);
+			var actionResult = await action(traceInfo, transactionController, cancellationToken).ConfigureAwait(false);
 			result.MergeHasError(actionResult);
 
-			if (isReadOnly && transactionContext.TransactionResult != TransactionResult.None)
-				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionContext.TransactionResult)} == {transactionContext.TransactionResult}");
+			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
+				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionController.TransactionResult)} == {transactionController.TransactionResult}");
 
-			//if (!isReadOnly && transactionContext.TransactionResult == TransactionResult.None)
-			//	throw new InvalidOperationException($"{nameof(isReadOnly)} == false | {nameof(transactionContext.TransactionResult)} == {TransactionResult.None}");
+			//if (!isReadOnly && transactionController.TransactionResult == TransactionResult.None)
+			//	throw new InvalidOperationException($"{nameof(isReadOnly)} == false | {nameof(transactionController.TransactionResult)} == {TransactionResult.None}");
 
 			if (actionResult == null)
 				throw new InvalidOperationException($"{nameof(actionResult)} == null");
 
 			if (actionResult.HasError)
 			{
-				if (transactionContext.TransactionResult != TransactionResult.Rollback)
-					transactionContext.ScheduleRollback(null);
+				if (transactionController.TransactionResult != TransactionResult.Rollback)
+					transactionController.ScheduleRollback(null);
 			}
 			else
 			{
-				if (transactionContext.TransactionResult == TransactionResult.Commit)
-					await transactionContext.TransactionManager.CommitAsync(cancellationToken).ConfigureAwait(false);
+				if (transactionController.TransactionResult == TransactionResult.Commit)
+					await transactionController.TransactionCoordinator.CommitAsync(cancellationToken).ConfigureAwait(false);
 			}
 
 			return result.Build();
@@ -119,15 +71,15 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 #pragma warning restore CS8604 // Possible null reference argument.
 			}
 
-			if (isReadOnly && transactionContext.TransactionResult != TransactionResult.None)
-				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionContext.TransactionResult)} == {transactionContext.TransactionResult}");
+			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
+				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionController.TransactionResult)} == {transactionController.TransactionResult}");
 
-			//if (!isReadOnly && transactionContext.TransactionResult == TransactionResult.None)
-			//	throw new InvalidOperationException($"{nameof(isReadOnly)} == false | {nameof(transactionContext.TransactionResult)} == {TransactionResult.None}");
+			//if (!isReadOnly && transactionController.TransactionResult == TransactionResult.None)
+			//	throw new InvalidOperationException($"{nameof(isReadOnly)} == false | {nameof(transactionController.TransactionResult)} == {TransactionResult.None}");
 
 			try
 			{
-				await transactionContext.TransactionManager.TryRollbackAsync(ex, cancellationToken).ConfigureAwait(false);
+				await transactionController.TransactionCoordinator.TryRollbackAsync(ex, cancellationToken).ConfigureAwait(false);
 			}
 			catch (Exception rollbackEx)
 			{
@@ -149,11 +101,11 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		}
 		finally
 		{
-			if (transactionContext.TransactionResult == TransactionResult.Rollback)
+			if (transactionController.TransactionResult == TransactionResult.Rollback)
 			{
 				try
 				{
-					await transactionContext.TransactionManager.TryRollbackAsync(null, cancellationToken).ConfigureAwait(false);
+					await transactionController.TransactionCoordinator.TryRollbackAsync(null, cancellationToken).ConfigureAwait(false);
 				}
 				catch (Exception rollbackEx)
 				{
@@ -163,8 +115,8 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 							await onError(
 								traceInfo,
 								rollbackEx,
-								!string.IsNullOrWhiteSpace(transactionContext.RollbackErrorInfo)
-									? $"{(!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? $"{unhandledExceptionDetail} " : "")}{transactionContext.RollbackErrorInfo} {DefaultRollbackErrorInfo}"
+								!string.IsNullOrWhiteSpace(transactionController.RollbackErrorInfo)
+									? $"{(!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? $"{unhandledExceptionDetail} " : "")}{transactionController.RollbackErrorInfo} {DefaultRollbackErrorInfo}"
 									: (!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultRollbackErrorInfo)).ConfigureAwait(false);
 
 						result.WithError(errorMessage);
@@ -175,8 +127,8 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 						result.WithInvalidOperationException(traceInfo, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : UnhandledExceptionInfo, logEx);
 						result.WithInvalidOperationException(
 							traceInfo,
-							!string.IsNullOrWhiteSpace(transactionContext.RollbackErrorInfo)
-									? $"{(!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? $"{unhandledExceptionDetail} " : "")}{transactionContext.RollbackErrorInfo} {DefaultRollbackErrorInfo}"
+							!string.IsNullOrWhiteSpace(transactionController.RollbackErrorInfo)
+									? $"{(!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? $"{unhandledExceptionDetail} " : "")}{transactionController.RollbackErrorInfo} {DefaultRollbackErrorInfo}"
 									: (!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultRollbackErrorInfo));
 #pragma warning restore CS8604 // Possible null reference argument.
 					}
@@ -206,14 +158,14 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 				}
 			}
 
-			if (disposeTransactionContext)
+			if (disposeTransactionController)
 			{
 				try
 				{
 #if NETSTANDARD2_0 || NETSTANDARD2_1
-					transactionContext.Dispose();
+					transactionController.Dispose();
 #else
-					await transactionContext.DisposeAsync().ConfigureAwait(false);
+					await transactionController.DisposeAsync().ConfigureAwait(false);
 #endif
 				}
 				catch (Exception disposeEx)
@@ -238,12 +190,12 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 	public static async Task<IResult<T>> ExecuteActionAsync<T>(
 		bool isReadOnly,
 		ITraceInfo traceInfo,
-		ITransactionContext transactionContext,
-		Func<ITraceInfo, ITransactionContext, CancellationToken, Task<IResult<T>>> action,
+		ITransactionController transactionController,
+		Func<ITraceInfo, ITransactionController, CancellationToken, Task<IResult<T>>> action,
 		string? unhandledExceptionDetail,
 		Func<ITraceInfo, Exception?, string?, Task<IErrorMessage>> onError,
 		Func<Task>? @finally,
-		bool disposeTransactionContext = true,
+		bool disposeTransactionController = true,
 		CancellationToken cancellationToken = default)
 	{
 		traceInfo = TraceInfo.Create(traceInfo);
@@ -255,32 +207,32 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		if (onError == null)
 			return result.WithArgumentNullException(traceInfo, nameof(onError));
 
-		if (transactionContext == null)
-			return result.WithArgumentNullException(traceInfo, nameof(transactionContext));
+		if (transactionController == null)
+			return result.WithArgumentNullException(traceInfo, nameof(transactionController));
 
 		try
 		{
-			var actionResult = await action(traceInfo, transactionContext, cancellationToken).ConfigureAwait(false);
+			var actionResult = await action(traceInfo, transactionController, cancellationToken).ConfigureAwait(false);
 			result.MergeHasError(actionResult);
 
-			if (isReadOnly && transactionContext.TransactionResult != TransactionResult.None)
-				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionContext.TransactionResult)} == {transactionContext.TransactionResult}");
+			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
+				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionController.TransactionResult)} == {transactionController.TransactionResult}");
 
-			//if (!isReadOnly && transactionContext.TransactionResult == TransactionResult.None)
-			//	throw new InvalidOperationException($"{nameof(isReadOnly)} == false | {nameof(transactionContext.TransactionResult)} == {TransactionResult.None}");
+			//if (!isReadOnly && transactionController.TransactionResult == TransactionResult.None)
+			//	throw new InvalidOperationException($"{nameof(isReadOnly)} == false | {nameof(transactionController.TransactionResult)} == {TransactionResult.None}");
 
 			if (actionResult == null)
 				throw new InvalidOperationException($"{nameof(actionResult)} == null");
 
 			if (actionResult.HasError)
 			{
-				if (transactionContext.TransactionResult != TransactionResult.Rollback)
-					transactionContext.ScheduleRollback(null);
+				if (transactionController.TransactionResult != TransactionResult.Rollback)
+					transactionController.ScheduleRollback(null);
 			}
 			else
 			{
-				if (transactionContext.TransactionResult == TransactionResult.Commit) 
-					await transactionContext.TransactionManager.CommitAsync(cancellationToken).ConfigureAwait(false);
+				if (transactionController.TransactionResult == TransactionResult.Commit) 
+					await transactionController.TransactionCoordinator.CommitAsync(cancellationToken).ConfigureAwait(false);
 			}
 
 			return result.WithData(actionResult.Data).Build();
@@ -300,15 +252,15 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 #pragma warning restore CS8604 // Possible null reference argument.
 			}
 
-			if (isReadOnly && transactionContext.TransactionResult != TransactionResult.None)
-				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionContext.TransactionResult)} == {transactionContext.TransactionResult}");
+			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
+				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionController.TransactionResult)} == {transactionController.TransactionResult}");
 
-			//if (!isReadOnly && transactionContext.TransactionResult == TransactionResult.None)
-			//	throw new InvalidOperationException($"{nameof(isReadOnly)} == false | {nameof(transactionContext.TransactionResult)} == {TransactionResult.None}");
+			//if (!isReadOnly && transactionController.TransactionResult == TransactionResult.None)
+			//	throw new InvalidOperationException($"{nameof(isReadOnly)} == false | {nameof(transactionController.TransactionResult)} == {TransactionResult.None}");
 
 			try
 			{
-				await transactionContext.TransactionManager.TryRollbackAsync(ex, cancellationToken).ConfigureAwait(false);
+				await transactionController.TransactionCoordinator.TryRollbackAsync(ex, cancellationToken).ConfigureAwait(false);
 			}
 			catch (Exception rollbackEx)
 			{
@@ -330,11 +282,11 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		}
 		finally
 		{
-			if (transactionContext.TransactionResult == TransactionResult.Rollback)
+			if (transactionController.TransactionResult == TransactionResult.Rollback)
 			{
 				try
 				{
-					await transactionContext.TransactionManager.TryRollbackAsync(null, cancellationToken).ConfigureAwait(false);
+					await transactionController.TransactionCoordinator.TryRollbackAsync(null, cancellationToken).ConfigureAwait(false);
 				}
 				catch (Exception rollbackEx)
 				{
@@ -344,8 +296,8 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 							await onError(
 								traceInfo,
 								rollbackEx,
-								!string.IsNullOrWhiteSpace(transactionContext.RollbackErrorInfo)
-									? $"{(!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? $"{unhandledExceptionDetail} " : "")}{transactionContext.RollbackErrorInfo} {DefaultRollbackErrorInfo}"
+								!string.IsNullOrWhiteSpace(transactionController.RollbackErrorInfo)
+									? $"{(!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? $"{unhandledExceptionDetail} " : "")}{transactionController.RollbackErrorInfo} {DefaultRollbackErrorInfo}"
 									: (!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultRollbackErrorInfo)).ConfigureAwait(false);
 
 						result.WithError(errorMessage);
@@ -356,8 +308,8 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 						result.WithInvalidOperationException(traceInfo, !string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : UnhandledExceptionInfo, logEx);
 						result.WithInvalidOperationException(
 							traceInfo,
-							!string.IsNullOrWhiteSpace(transactionContext.RollbackErrorInfo)
-								? $"{(!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? $"{unhandledExceptionDetail} " : "")}{transactionContext.RollbackErrorInfo} {DefaultRollbackErrorInfo}"
+							!string.IsNullOrWhiteSpace(transactionController.RollbackErrorInfo)
+								? $"{(!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? $"{unhandledExceptionDetail} " : "")}{transactionController.RollbackErrorInfo} {DefaultRollbackErrorInfo}"
 								: (!string.IsNullOrWhiteSpace(unhandledExceptionDetail) ? unhandledExceptionDetail : DefaultRollbackErrorInfo));
 #pragma warning restore CS8604 // Possible null reference argument.
 					}
@@ -387,14 +339,14 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 				}
 			}
 
-			if (disposeTransactionContext)
+			if (disposeTransactionController)
 			{
 				try
 				{
 #if NETSTANDARD2_0 || NETSTANDARD2_1
-					transactionContext.Dispose();
+					transactionController.Dispose();
 #else
-					await transactionContext.DisposeAsync().ConfigureAwait(false);
+					await transactionController.DisposeAsync().ConfigureAwait(false);
 #endif
 				}
 				catch (Exception disposeEx)
