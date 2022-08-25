@@ -32,7 +32,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		try
 		{
 			var actionResult = await action(traceInfo, transactionController, cancellationToken).ConfigureAwait(false);
-			result.MergeHasError(actionResult);
+			result.MergeAllHasError(actionResult);
 
 			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
 				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionController.TransactionResult)} == {transactionController.TransactionResult}");
@@ -213,7 +213,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		try
 		{
 			var actionResult = await action(traceInfo, transactionController, cancellationToken).ConfigureAwait(false);
-			result.MergeHasError(actionResult);
+			result.MergeAllHasError(actionResult);
 
 			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
 				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionController.TransactionResult)} == {transactionController.TransactionResult}");

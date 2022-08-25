@@ -31,7 +31,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		try
 		{
 			var actionResult = action(traceInfo, transactionController);
-			result.MergeHasError(actionResult);
+			result.MergeAllHasError(actionResult);
 
 			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
 				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionController.TransactionResult)} == {transactionController.TransactionResult}");
@@ -211,7 +211,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		try
 		{
 			var actionResult = action(traceInfo, transactionController);
-			result.MergeHasError(actionResult);
+			result.MergeAllHasError(actionResult);
 
 			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
 				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionController.TransactionResult)} == {transactionController.TransactionResult}");
