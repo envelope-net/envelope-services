@@ -1,6 +1,7 @@
 ﻿using Envelope.Logging;
 using Envelope.Services.Exceptions;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Envelope.Services;
 
@@ -26,6 +27,10 @@ public interface IResult
 	ResultException? ToException(ILogger? logger = null, bool skipIfAlreadyLogged = true);
 
 	void ThrowIfError();
+
+	T? GetData<T>();
+
+	bool TryGetData<T>([MaybeNullWhen(false)] out T data);
 }
 
 public interface IResult<TData> : IResult
