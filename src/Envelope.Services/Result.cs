@@ -1,6 +1,7 @@
 ﻿using Envelope.Services.Exceptions;
 using Envelope.Logging;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Envelope.Services;
 
@@ -39,6 +40,21 @@ public class Result : IResult
 		if (exception != null)
 			throw exception;
 	}
+
+	public T? GetData<T>()
+		=> GetDataInternal<T>();
+
+	protected internal virtual T? GetDataInternal<T>()
+		=> default;
+
+	public bool TryGetData<T>([MaybeNullWhen(false)] out T data)
+		=> TryGetDataInternal(out data);
+
+	protected internal virtual bool TryGetDataInternal<T>([MaybeNullWhen(false)] out T data)
+	{
+		data = default;
+		return false;
+	}
 }
 
 public class Result<TData> : Result, IResult<TData>, IResult
@@ -68,5 +84,25 @@ public class Result<TData> : Result, IResult<TData>, IResult
 	{
 		_data = default;
 		DataWasSet = false;
+	}
+
+	protected internal override T GetDataInternal<T>()
+	{
+		if (Data is T data)
+			return data;
+
+		return default!;
+	}
+
+	protected internal override bool TryGetDataInternal<T>([MaybeNullWhen(false)] out T data)
+	{
+		if (Data is T d)
+		{
+			data = d;
+			return true;
+		}
+
+		data = default!;
+		return false;
 	}
 }

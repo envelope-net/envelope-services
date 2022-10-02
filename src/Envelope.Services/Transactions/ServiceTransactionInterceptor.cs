@@ -10,7 +10,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		bool isReadOnly,
 		ITraceInfo traceInfo,
 		ITransactionController transactionController,
-		Func<ITraceInfo, ITransactionController, CancellationToken, Task<IResult>> action,
+		Func<ITraceInfo, ITransactionController, string?, CancellationToken, Task<IResult>> action,
 		string? unhandledExceptionDetail,
 		Func<ITraceInfo, Exception?, string?, Task<IErrorMessage>> onError,
 		Func<Task>? @finally,
@@ -31,7 +31,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 
 		try
 		{
-			var actionResult = await action(traceInfo, transactionController, cancellationToken).ConfigureAwait(false);
+			var actionResult = await action(traceInfo, transactionController, unhandledExceptionDetail, cancellationToken).ConfigureAwait(false);
 			result.MergeAllHasError(actionResult);
 
 			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
@@ -191,7 +191,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		bool isReadOnly,
 		ITraceInfo traceInfo,
 		ITransactionController transactionController,
-		Func<ITraceInfo, ITransactionController, CancellationToken, Task<IResult<T>>> action,
+		Func<ITraceInfo, ITransactionController, string?, CancellationToken, Task<IResult<T>>> action,
 		string? unhandledExceptionDetail,
 		Func<ITraceInfo, Exception?, string?, Task<IErrorMessage>> onError,
 		Func<Task>? @finally,
@@ -212,7 +212,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 
 		try
 		{
-			var actionResult = await action(traceInfo, transactionController, cancellationToken).ConfigureAwait(false);
+			var actionResult = await action(traceInfo, transactionController, unhandledExceptionDetail, cancellationToken).ConfigureAwait(false);
 			result.MergeAllHasError(actionResult);
 
 			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
