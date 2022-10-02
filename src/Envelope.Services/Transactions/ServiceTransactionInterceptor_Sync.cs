@@ -10,7 +10,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		bool isReadOnly,
 		ITraceInfo traceInfo,
 		ITransactionController transactionController,
-		Func<ITraceInfo, ITransactionController, IResult> action,
+		Func<ITraceInfo, ITransactionController, string?, IResult> action,
 		string? unhandledExceptionDetail,
 		Func<ITraceInfo, Exception?, string?, IErrorMessage> onError,
 		Action? @finally,
@@ -30,7 +30,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 
 		try
 		{
-			var actionResult = action(traceInfo, transactionController);
+			var actionResult = action(traceInfo, transactionController, unhandledExceptionDetail);
 			result.MergeAllHasError(actionResult);
 
 			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
@@ -190,7 +190,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		bool isReadOnly,
 		ITraceInfo traceInfo,
 		ITransactionController transactionController,
-		Func<ITraceInfo, ITransactionController, IResult<T>> action,
+		Func<ITraceInfo, ITransactionController, string?, IResult<T>> action,
 		string? unhandledExceptionDetail,
 		Func<ITraceInfo, Exception?, string?, IErrorMessage> onError,
 		Action? @finally,
@@ -210,7 +210,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 
 		try
 		{
-			var actionResult = action(traceInfo, transactionController);
+			var actionResult = action(traceInfo, transactionController, unhandledExceptionDetail);
 			result.MergeAllHasError(actionResult);
 
 			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
