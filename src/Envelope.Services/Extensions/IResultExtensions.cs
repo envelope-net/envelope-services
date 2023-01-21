@@ -3,13 +3,74 @@ using Envelope.Localization;
 using Envelope.Logging;
 using Envelope.Trace;
 using Envelope.Validation;
-using Envelope.Validation.Results;
 using Microsoft.Extensions.Logging;
 
 namespace Envelope.Services;
 
 public static class IResultExtensions
 {
+	public static TResult ToDto<TResult>(
+		this TResult result,
+		params string[] ignoredPropterties)
+		where TResult : IResult
+	{
+		if (result == null)
+			throw new ArgumentNullException(nameof(result));
+
+		for (int i = 0; i < result.SuccessMessages.Count; i++)
+			result.SuccessMessages[i] = result.SuccessMessages[i].ToDto(ignoredPropterties);
+
+		for (int i = 0; i < result.WarningMessages.Count; i++)
+			result.WarningMessages[i] = result.WarningMessages[i].ToDto(ignoredPropterties);
+
+		for (int i = 0; i < result.ErrorMessages.Count; i++)
+			result.ErrorMessages[i] = result.ErrorMessages[i].ToDto(ignoredPropterties);
+
+		return result;
+	}
+
+	public static TResult ToClientDto<TResult>(this TResult result)
+		where TResult : IResult
+	{
+		if (result == null)
+			throw new ArgumentNullException(nameof(result));
+
+		for (int i = 0; i < result.SuccessMessages.Count; i++)
+			result.SuccessMessages[i] = result.SuccessMessages[i].ToClientDto();
+
+		for (int i = 0; i < result.WarningMessages.Count; i++)
+			result.WarningMessages[i] = result.WarningMessages[i].ToClientDto();
+
+		for (int i = 0; i < result.ErrorMessages.Count; i++)
+			result.ErrorMessages[i] = result.ErrorMessages[i].ToClientDto();
+
+		return result;
+	}
+
+	public static TObject ToDto<TBuilder, TObject>(
+		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		params string[] ignoredPropterties)
+		where TBuilder : ResultBuilderBase<TBuilder, TObject>
+		where TObject : IResult
+	{
+		if (commandResultBuilder == null)
+			throw new ArgumentNullException(nameof(commandResultBuilder));
+
+		var result = commandResultBuilder.Build();
+		return result.ToDto(ignoredPropterties);
+	}
+
+	public static TObject ToClientDto<TBuilder, TObject>(this ResultBuilderBase<TBuilder, TObject> commandResultBuilder)
+		where TBuilder : ResultBuilderBase<TBuilder, TObject>
+		where TObject : IResult
+	{
+		if (commandResultBuilder == null)
+			throw new ArgumentNullException(nameof(commandResultBuilder));
+
+		var result = commandResultBuilder.Build();
+		return result.ToClientDto();
+	}
+
 	public static TObject WithArgumentException<TBuilder, TObject>(
 		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
 		ITraceInfo traceInfo,

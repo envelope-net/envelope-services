@@ -5,6 +5,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Envelope.Services;
 
+#if NET6_0_OR_GREATER
+[Envelope.Serializer.JsonPolymorphicConverter]
+#endif
 public interface IResult
 {
 	List<ILogMessage> SuccessMessages { get; }
@@ -33,6 +36,9 @@ public interface IResult
 	bool TryGetData<T>([MaybeNullWhen(false)] out T data);
 }
 
+#if NET6_0_OR_GREATER
+[Envelope.Serializer.JsonPolymorphicConverter]
+#endif
 public interface IResult<TData> : IResult
 {
 	bool DataWasSet { get; }
