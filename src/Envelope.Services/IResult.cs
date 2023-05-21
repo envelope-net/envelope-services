@@ -31,6 +31,8 @@ public interface IResult
 
 	void ThrowIfError();
 
+	object? GetData();
+
 	T? GetData<T>();
 
 	bool TryGetData<T>([MaybeNullWhen(false)] out T data);

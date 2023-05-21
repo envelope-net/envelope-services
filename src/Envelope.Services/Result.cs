@@ -41,6 +41,9 @@ public class Result : IResult
 			throw exception;
 	}
 
+	public virtual object? GetData()
+		=> default;
+
 	public T? GetData<T>()
 		=> GetDataInternal<T>();
 
@@ -85,6 +88,9 @@ public class Result<TData> : Result, IResult<TData>, IResult
 		_data = default;
 		DataWasSet = false;
 	}
+
+	public override object? GetData()
+		=> Data;
 
 	protected internal override T GetDataInternal<T>()
 	{
