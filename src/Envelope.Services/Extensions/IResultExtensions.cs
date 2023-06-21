@@ -48,37 +48,37 @@ public static class IResultExtensions
 	}
 
 	public static TObject ToDto<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		params string[] ignoredPropterties)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
 	{
-		if (commandResultBuilder == null)
-			throw new ArgumentNullException(nameof(commandResultBuilder));
+		if (resultBuilder == null)
+			throw new ArgumentNullException(nameof(resultBuilder));
 
-		var result = commandResultBuilder.Build();
+		var result = resultBuilder.Build();
 		return result.ToDto(ignoredPropterties);
 	}
 
-	public static TObject ToClientDto<TBuilder, TObject>(this ResultBuilderBase<TBuilder, TObject> commandResultBuilder)
+	public static TObject ToClientDto<TBuilder, TObject>(this ResultBuilderBase<TBuilder, TObject> resultBuilder)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
 	{
-		if (commandResultBuilder == null)
-			throw new ArgumentNullException(nameof(commandResultBuilder));
+		if (resultBuilder == null)
+			throw new ArgumentNullException(nameof(resultBuilder));
 
-		var result = commandResultBuilder.Build();
+		var result = resultBuilder.Build();
 		return result.ToClientDto();
 	}
 
 	public static TObject WithArgumentException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				x => x
@@ -89,13 +89,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithArgumentNullException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		string paramName,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				x => x
@@ -106,13 +106,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithArgumentOutOfRangeException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				x => x
@@ -123,13 +123,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithInvalidOperationException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				x => x
@@ -140,13 +140,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithNotImplementedException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				x => x
@@ -157,13 +157,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithNotSupportedException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				x => x
@@ -174,13 +174,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithApplicationException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				x => x
@@ -191,7 +191,7 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithForbiddenException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		IApplicationResourcesProvider applicationResourcesProvider,
 		string internalMessage,
@@ -199,7 +199,7 @@ public static class IResultExtensions
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				x => x
@@ -211,7 +211,7 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithNotFoundException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		IApplicationResourcesProvider applicationResourcesProvider,
 		string internalMessage,
@@ -219,7 +219,7 @@ public static class IResultExtensions
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				x => x
@@ -231,14 +231,14 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithClientException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		string clientMessage,
 		string? internalMessage = null,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				x => x
@@ -250,13 +250,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithWarning<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithWarn(
 				traceInfo,
 				x => x
@@ -266,13 +266,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithClientWarning<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		string clientMessage,
 		string? internalMessage = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithWarn(
 				traceInfo,
 				x => x
@@ -281,13 +281,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithArgumentException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				(x => x
@@ -297,14 +297,14 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithArgumentNullException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		string paramName,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				(x => x
@@ -316,13 +316,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithArgumentOutOfRangeException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				(x => x
@@ -332,13 +332,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithInvalidOperationException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				(x => x
@@ -348,13 +348,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithNotImplementedException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				(x => x
@@ -364,13 +364,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithNotSupportedException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				(x => x
@@ -380,13 +380,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithApplicationException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				(x => x
@@ -396,7 +396,7 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithForbiddenException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		IApplicationResourcesProvider applicationResourcesProvider,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
@@ -404,7 +404,7 @@ public static class IResultExtensions
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				(x => x
@@ -417,7 +417,7 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithNotFoundException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		IApplicationResourcesProvider applicationResourcesProvider,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
@@ -425,7 +425,7 @@ public static class IResultExtensions
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				(x => x
@@ -438,14 +438,14 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithClientException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		string clientMessage,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				traceInfo,
 				(x => x
@@ -456,13 +456,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithWarning<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		Action<LogMessageBuilder>? logMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithWarn(
 				traceInfo,
 				(x => x
@@ -471,13 +471,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithClientWarning<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		ITraceInfo traceInfo,
 		string clientMessage,
 		Action<LogMessageBuilder>? logMessageConfigurator = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithWarn(
 				traceInfo,
 				(x => x
@@ -490,13 +490,13 @@ public static class IResultExtensions
 
 
 	public static TObject WithArgumentException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				x => x
@@ -507,13 +507,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithArgumentNullException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		string paramName,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				x => x
@@ -524,13 +524,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithArgumentOutOfRangeException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				x => x
@@ -541,13 +541,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithInvalidOperationException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				x => x
@@ -558,13 +558,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithNotImplementedException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				x => x
@@ -575,13 +575,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithNotSupportedException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				x => x
@@ -592,13 +592,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithApplicationException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				x => x
@@ -609,7 +609,7 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithForbiddenException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		IApplicationResourcesProvider applicationResourcesProvider,
 		string internalMessage,
@@ -617,7 +617,7 @@ public static class IResultExtensions
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				x => x
@@ -629,7 +629,7 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithNotFoundException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		IApplicationResourcesProvider applicationResourcesProvider,
 		string internalMessage,
@@ -637,7 +637,7 @@ public static class IResultExtensions
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				x => x
@@ -649,14 +649,14 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithClientException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		string clientMessage,
 		string? internalMessage = null,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				x => x
@@ -668,13 +668,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithWarning<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		string internalMessage,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithWarn(
 				scope,
 				x => x
@@ -684,13 +684,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithClientWarning<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		string clientMessage,
 		string? internalMessage = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithWarn(
 				scope,
 				x => x
@@ -699,13 +699,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithArgumentException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				(x => x
@@ -715,14 +715,14 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithArgumentNullException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		string paramName,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				(x => x
@@ -734,13 +734,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithArgumentOutOfRangeException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				(x => x
@@ -750,13 +750,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithInvalidOperationException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				(x => x
@@ -766,13 +766,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithNotImplementedException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				(x => x
@@ -782,13 +782,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithNotSupportedException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				(x => x
@@ -798,13 +798,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithApplicationException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				(x => x
@@ -814,7 +814,7 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithForbiddenException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		IApplicationResourcesProvider applicationResourcesProvider,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
@@ -822,7 +822,7 @@ public static class IResultExtensions
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				(x => x
@@ -835,7 +835,7 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithNotFoundException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		IApplicationResourcesProvider applicationResourcesProvider,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
@@ -843,7 +843,7 @@ public static class IResultExtensions
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				(x => x
@@ -856,14 +856,14 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithClientException<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		string clientMessage,
 		Action<ErrorMessageBuilder>? errorMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithError(
 				scope,
 				(x => x
@@ -874,13 +874,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithWarning<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		Action<LogMessageBuilder>? logMessageConfigurator,
 		Exception? ex = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithWarn(
 				scope,
 				(x => x
@@ -889,13 +889,13 @@ public static class IResultExtensions
 			.Build();
 
 	public static TObject WithClientWarning<TBuilder, TObject>(
-		this ResultBuilderBase<TBuilder, TObject> commandResultBuilder,
+		this ResultBuilderBase<TBuilder, TObject> resultBuilder,
 		MethodLogScope scope,
 		string clientMessage,
 		Action<LogMessageBuilder>? logMessageConfigurator = null)
 		where TBuilder : ResultBuilderBase<TBuilder, TObject>
 		where TObject : IResult
-		=> commandResultBuilder
+		=> resultBuilder
 			.WithWarn(
 				scope,
 				(x => x
@@ -903,7 +903,11 @@ public static class IResultExtensions
 				+ logMessageConfigurator)
 			.Build();
 
-	public static bool MergeHasError(this IResult result, ITraceInfo traceInfo, IValidationResult validationResult, bool withPropertyName)
+	public static bool MergeHasError(
+		this IResult result,
+		ITraceInfo traceInfo,
+		IValidationResult validationResult,
+		bool withPropertyName)
 	{
 		if (result == null)
 			throw new ArgumentNullException(nameof(result));
@@ -928,7 +932,32 @@ public static class IResultExtensions
 		return result.HasError;
 	}
 
-	public static bool MergeHasError<TResultBuilder>(this TResultBuilder resultBuilder, ITraceInfo traceInfo, IValidationResult validationResult, bool withPropertyName)
+	public static bool MergeHasError(
+		this IResult result,
+		ITraceInfo traceInfo,
+		System.Xml.Schema.ValidationEventArgs[] xmlValidationArgs)
+	{
+		if (result == null)
+			throw new ArgumentNullException(nameof(result));
+
+		if (0 < xmlValidationArgs?.Length)
+		{
+			foreach (var xmlValidationArg in xmlValidationArgs)
+			{
+				if (xmlValidationArg.Severity == System.Xml.Schema.XmlSeverityType.Error)
+					result.ErrorMessages.Add(xmlValidationArg.ToErrorMessage(traceInfo));
+				else
+					result.WarningMessages.Add(xmlValidationArg.ToLogMessage(traceInfo));
+			}
+		}
+
+		return result.HasError;
+	}
+
+	public static bool MergeHasError<TResultBuilder>(
+		this TResultBuilder resultBuilder,
+		ITraceInfo traceInfo,
+		IValidationResult validationResult, bool withPropertyName)
 		where TResultBuilder : IResultBuilder
 	{
 		if (resultBuilder == null)
@@ -948,6 +977,29 @@ public static class IResultExtensions
 			{
 				var warnigMessage = ValidationFailureToWarningMessage(traceInfo, failure, withPropertyName);
 				resultBuilder.AddWarning(warnigMessage);
+			}
+		}
+
+		return resultBuilder.HasAnyError();
+	}
+
+	public static bool MergeHasError<TResultBuilder>(
+		this TResultBuilder resultBuilder,
+		ITraceInfo traceInfo,
+		System.Xml.Schema.ValidationEventArgs[] xmlValidationArgs)
+		where TResultBuilder : IResultBuilder
+	{
+		if (resultBuilder == null)
+			throw new ArgumentNullException(nameof(resultBuilder));
+
+		if (0 < xmlValidationArgs?.Length)
+		{
+			foreach (var xmlValidationArg in xmlValidationArgs)
+			{
+				if (xmlValidationArg.Severity == System.Xml.Schema.XmlSeverityType.Error)
+					resultBuilder.AddError(xmlValidationArg.ToErrorMessage(traceInfo));
+				else
+					resultBuilder.AddWarning(xmlValidationArg.ToLogMessage(traceInfo));
 			}
 		}
 

@@ -164,7 +164,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 				{
 #if NETSTANDARD2_0 || NETSTANDARD2_1
 					transactionController.Dispose();
-#else
+#elif NET6_0_OR_GREATER
 					await transactionController.DisposeAsync().ConfigureAwait(false);
 #endif
 				}
@@ -345,7 +345,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 				{
 #if NETSTANDARD2_0 || NETSTANDARD2_1
 					transactionController.Dispose();
-#else
+#elif NET6_0_OR_GREATER
 					await transactionController.DisposeAsync().ConfigureAwait(false);
 #endif
 				}
