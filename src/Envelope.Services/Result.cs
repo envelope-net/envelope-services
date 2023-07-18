@@ -19,6 +19,13 @@ public class Result : IResult
 
 	public bool HasError => 0 < ErrorMessages.Count;
 
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+	[Newtonsoft.Json.JsonIgnore]
+#elif NET6_0_OR_GREATER
+	[System.Text.Json.Serialization.JsonIgnore]
+#endif
+	public bool HasTransactionRollbackError => ErrorMessages.Where(x => !x.DisableTransactionRollback).Any();
+
 	public bool HasAnyMessage => HasSuccessMessage || HasWarning || HasError;
 
 	public long? AffectedEntities { get; set; }

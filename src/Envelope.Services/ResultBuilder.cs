@@ -8,6 +8,8 @@ public interface IResultBuilder
 {
 	bool HasAnyError();
 
+	bool HasAnyTransactionRollbackError();
+
 	IResultBuilder AddWarning(ILogMessage message);
 
 	IResultBuilder AddError(IErrorMessage message);
@@ -20,12 +22,22 @@ public interface IResultBuilder<TBuilder, TObject> : IResultBuilder
 	TBuilder Object(TObject result);
 	TObject Build();
 
+	TBuilder MergeErrors(IResult otherResult);
+
+	TBuilder MergeAll(IResult otherResult);
+
 	bool MergeHasError(IResult otherResult);
+
+	bool MergeHasTransactionRollbackError(IResult otherResult);
 
 	bool MergeAllHasError(IResult otherResult);
 
+	bool MergeAllHasTransactionRollbackError(IResult otherResult);
+
 
 	bool HasError();
+
+	bool HasTransactionRollbackError();
 
 	object? GetData();
 
@@ -56,8 +68,6 @@ public interface IResultBuilder<TBuilder, TObject> : IResultBuilder
 	TBuilder ForAllIErrorMessages(Action<ILogMessage> errorMessageConfigurator);
 
 	TBuilder ForAllMessages(Action<ILogMessage> messageConfigurator);
-
-	TBuilder Merge(IResult otherResult);
 }
 
 public abstract class ResultBuilderBase<TBuilder, TObject> : IResultBuilder<TBuilder, TObject>, IResultBuilder
@@ -85,15 +95,15 @@ public abstract class ResultBuilderBase<TBuilder, TObject> : IResultBuilder<TBui
 
 	#region API
 
-	public bool MergeHasError(IResult otherResult)
+	public TBuilder MergeErrors(IResult otherResult)
 	{
 		if (otherResult != null && otherResult.HasError)
 			_result.ErrorMessages.AddRange(otherResult.ErrorMessages);
 
-		return _result.HasError;
+		return _builder;
 	}
 
-	public bool MergeAllHasError(IResult otherResult)
+	public TBuilder MergeAll(IResult otherResult)
 	{
 		if (otherResult != null)
 		{
@@ -107,12 +117,41 @@ public abstract class ResultBuilderBase<TBuilder, TObject> : IResultBuilder<TBui
 				_result.ErrorMessages.AddRange(otherResult.ErrorMessages);
 		}
 
+		return _builder;
+	}
+
+	public bool MergeHasError(IResult otherResult)
+	{
+		MergeErrors(otherResult);
 		return _result.HasError;
+	}
+
+	public bool MergeHasTransactionRollbackError(IResult otherResult)
+	{
+		MergeErrors(otherResult);
+		return _result.HasTransactionRollbackError;
+	}
+
+	public bool MergeAllHasError(IResult otherResult)
+	{
+		MergeAll(otherResult);
+		return _result.HasError;
+	}
+
+	public bool MergeAllHasTransactionRollbackError(IResult otherResult)
+	{
+		MergeAll(otherResult);
+		return _result.HasTransactionRollbackError;
 	}
 
 	public bool HasError()
 	{
 		return _result.HasError;
+	}
+
+	public bool HasTransactionRollbackError()
+	{
+		return _result.HasTransactionRollbackError;
 	}
 
 	public virtual object? GetData()
@@ -221,23 +260,11 @@ public abstract class ResultBuilderBase<TBuilder, TObject> : IResultBuilder<TBui
 			.ForAllWarningMessages(messageConfigurator)
 			.ForAllIErrorMessages(messageConfigurator);
 
-	public TBuilder Merge(IResult otherResult)
-	{
-		if (otherResult != null)
-		{
-			if (otherResult.HasError)
-				_result.ErrorMessages.AddRange(otherResult.ErrorMessages);
-			if (otherResult.HasWarning)
-				_result.WarningMessages.AddRange(otherResult.WarningMessages);
-			if (otherResult.HasSuccessMessage)
-				_result.SuccessMessages.AddRange(otherResult.SuccessMessages);
-		}
-
-		return _builder;
-	}
-
 	bool IResultBuilder.HasAnyError()
 		=> Build().HasError;
+
+	bool IResultBuilder.HasAnyTransactionRollbackError()
+		=> Build().HasTransactionRollbackError;
 
 	IResultBuilder IResultBuilder.AddWarning(ILogMessage message)
 		=> WithWarn(message);
@@ -304,9 +331,11 @@ public interface IResultBuilder<TBuilder, TData, TObject> : IResultBuilder<TBuil
 
 	TBuilder ClearData();
 
+	TBuilder MergeAllWithData(IResult<TData> otherResult);
+
 	bool MergeAllWithDataHasError(IResult<TData> otherResult);
 
-	void MergeAllWithData(IResult<TData> otherResult);
+	bool MergeAllWithDataHasTransactionRollbackError(IResult<TData> otherResult);
 }
 
 public abstract class ResultBuilderBase<TBuilder, TData, TObject> : ResultBuilderBase<TBuilder, TObject>, IResultBuilder<TBuilder, TData, TObject>, IResultBuilder
@@ -335,7 +364,7 @@ public abstract class ResultBuilderBase<TBuilder, TData, TObject> : ResultBuilde
 		return _builder;
 	}
 
-	public bool MergeAllWithDataHasError(IResult<TData> otherResult)
+	public TBuilder MergeAllWithData(IResult<TData> otherResult)
 	{
 		if (otherResult != null)
 		{
@@ -351,11 +380,20 @@ public abstract class ResultBuilderBase<TBuilder, TData, TObject> : ResultBuilde
 			_result.Data = otherResult.Data;
 		}
 
+		return _builder;
+	}
+
+	public bool MergeAllWithDataHasError(IResult<TData> otherResult)
+	{
+		MergeAllWithData(otherResult);
 		return _result.HasError;
 	}
 
-	public void MergeAllWithData(IResult<TData> otherResult)
-		=> MergeAllWithDataHasError(otherResult);
+	public bool MergeAllWithDataHasTransactionRollbackError(IResult<TData> otherResult)
+	{
+		MergeAllWithData(otherResult);
+		return _result.HasTransactionRollbackError;
+	}
 }
 
 public class ResultBuilder<TData> : ResultBuilderBase<ResultBuilder<TData>, TData, IResult<TData>>, IResultBuilder

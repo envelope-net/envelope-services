@@ -932,6 +932,35 @@ public static class IResultExtensions
 		return result.HasError;
 	}
 
+	public static bool MergeHasTransactionRollbackError(
+		this IResult result,
+		ITraceInfo traceInfo,
+		IValidationResult validationResult,
+		bool withPropertyName)
+	{
+		if (result == null)
+			throw new ArgumentNullException(nameof(result));
+
+		if (validationResult == null)
+			throw new ArgumentNullException(nameof(validationResult));
+
+		foreach (var failure in validationResult.Errors)
+		{
+			if (failure.Severity == ValidationSeverity.Error)
+			{
+				var errorMessage = ValidationFailureToErrorMessage(traceInfo, failure, withPropertyName);
+				result.ErrorMessages.Add(errorMessage);
+			}
+			else
+			{
+				var warnigMessage = ValidationFailureToWarningMessage(traceInfo, failure, withPropertyName);
+				result.WarningMessages.Add(warnigMessage);
+			}
+		}
+
+		return result.HasTransactionRollbackError;
+	}
+
 	public static bool MergeHasError(
 		this IResult result,
 		ITraceInfo traceInfo,
@@ -952,6 +981,28 @@ public static class IResultExtensions
 		}
 
 		return result.HasError;
+	}
+
+	public static bool MergeHasTransactionRollbackError(
+		this IResult result,
+		ITraceInfo traceInfo,
+		System.Xml.Schema.ValidationEventArgs[] xmlValidationArgs)
+	{
+		if (result == null)
+			throw new ArgumentNullException(nameof(result));
+
+		if (0 < xmlValidationArgs?.Length)
+		{
+			foreach (var xmlValidationArg in xmlValidationArgs)
+			{
+				if (xmlValidationArg.Severity == System.Xml.Schema.XmlSeverityType.Error)
+					result.ErrorMessages.Add(xmlValidationArg.ToErrorMessage(traceInfo));
+				else
+					result.WarningMessages.Add(xmlValidationArg.ToLogMessage(traceInfo));
+			}
+		}
+
+		return result.HasTransactionRollbackError;
 	}
 
 	public static bool MergeHasError<TResultBuilder>(
@@ -983,6 +1034,35 @@ public static class IResultExtensions
 		return resultBuilder.HasAnyError();
 	}
 
+	public static bool MergeHasTransactionRollbackError<TResultBuilder>(
+		this TResultBuilder resultBuilder,
+		ITraceInfo traceInfo,
+		IValidationResult validationResult, bool withPropertyName)
+		where TResultBuilder : IResultBuilder
+	{
+		if (resultBuilder == null)
+			throw new ArgumentNullException(nameof(resultBuilder));
+
+		if (validationResult == null)
+			throw new ArgumentNullException(nameof(validationResult));
+
+		foreach (var failure in validationResult.Errors)
+		{
+			if (failure.Severity == ValidationSeverity.Error)
+			{
+				var errorMessage = ValidationFailureToErrorMessage(traceInfo, failure, withPropertyName);
+				resultBuilder.AddError(errorMessage);
+			}
+			else
+			{
+				var warnigMessage = ValidationFailureToWarningMessage(traceInfo, failure, withPropertyName);
+				resultBuilder.AddWarning(warnigMessage);
+			}
+		}
+
+		return resultBuilder.HasAnyTransactionRollbackError();
+	}
+
 	public static bool MergeHasError<TResultBuilder>(
 		this TResultBuilder resultBuilder,
 		ITraceInfo traceInfo,
@@ -1004,6 +1084,29 @@ public static class IResultExtensions
 		}
 
 		return resultBuilder.HasAnyError();
+	}
+
+	public static bool MergeHasAnyTransactionRollbackError<TResultBuilder>(
+		this TResultBuilder resultBuilder,
+		ITraceInfo traceInfo,
+		System.Xml.Schema.ValidationEventArgs[] xmlValidationArgs)
+		where TResultBuilder : IResultBuilder
+	{
+		if (resultBuilder == null)
+			throw new ArgumentNullException(nameof(resultBuilder));
+
+		if (0 < xmlValidationArgs?.Length)
+		{
+			foreach (var xmlValidationArg in xmlValidationArgs)
+			{
+				if (xmlValidationArg.Severity == System.Xml.Schema.XmlSeverityType.Error)
+					resultBuilder.AddError(xmlValidationArg.ToErrorMessage(traceInfo));
+				else
+					resultBuilder.AddWarning(xmlValidationArg.ToLogMessage(traceInfo));
+			}
+		}
+
+		return resultBuilder.HasAnyTransactionRollbackError();
 	}
 
 	private static IErrorMessage ValidationFailureToErrorMessage(ITraceInfo traceInfo, IBaseValidationFailure failure, bool withPropertyName)

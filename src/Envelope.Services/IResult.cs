@@ -22,6 +22,13 @@ public interface IResult
 
 	bool HasError { get; }
 
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+	[Newtonsoft.Json.JsonIgnore]
+#elif NET6_0_OR_GREATER
+	[System.Text.Json.Serialization.JsonIgnore]
+#endif
+	bool HasTransactionRollbackError { get; }
+
 	bool HasAnyMessage { get; }
 
 	/// <summary>

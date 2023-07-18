@@ -31,7 +31,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		try
 		{
 			var actionResult = action(traceInfo, transactionController, unhandledExceptionDetail);
-			result.MergeAllHasError(actionResult);
+			result.MergeAll(actionResult);
 
 			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
 				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionController.TransactionResult)} == {transactionController.TransactionResult}");
@@ -42,7 +42,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 			if (actionResult == null)
 				throw new InvalidOperationException($"{nameof(actionResult)} == null");
 
-			if (actionResult.HasError)
+			if (actionResult.HasTransactionRollbackError)
 			{
 				if (transactionController.TransactionResult != TransactionResult.Rollback)
 					transactionController.ScheduleRollback(null);
@@ -211,7 +211,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 		try
 		{
 			var actionResult = action(traceInfo, transactionController, unhandledExceptionDetail);
-			result.MergeAllHasError(actionResult);
+			result.MergeAll(actionResult);
 
 			if (isReadOnly && transactionController.TransactionResult != TransactionResult.None)
 				throw new InvalidOperationException($"{nameof(isReadOnly)} == true | {nameof(transactionController.TransactionResult)} == {transactionController.TransactionResult}");
@@ -222,7 +222,7 @@ public partial class ServiceTransactionInterceptor : TransactionInterceptor
 			if (actionResult == null)
 				throw new InvalidOperationException($"{nameof(actionResult)} == null");
 
-			if (actionResult.HasError)
+			if (actionResult.HasTransactionRollbackError)
 			{
 				if (transactionController.TransactionResult != TransactionResult.Rollback)
 					transactionController.ScheduleRollback(null);
